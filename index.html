@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+    <?!= include('css'); ?> 
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular.min.js"></script>
+  </head>
+  <body>
+
+<div class="container" ng-app="myApp" ng-controller="myCtrl as vm">
+  <div class="jumbotron"><h1><?= appTitle?></h1><small><span id="StudentName">Logged in as <?= thisUser?></span></small></div>
+  <div id="bannerArea" ng-show="dataFetching"><div class="alert alert-info" >Loading...</div></div>
+  
+  <div id="myTop"  >
+    <div id="errorBanner" class="bg-danger" ng-show="error.status">{{error.msg}}</div>
+    <div class="col-md-8"><h1>Trip Choice Survey</h1>
+    <p>Please choose your Adventure Week trip</p>
+    </div>
+    <div class="col-md-4">
+      <div class="pull-right">
+              <button ng-click="reloadData()" title="click me to refresh data / check if survey is open" ng-disabled="dataFetching">Survey Refresh</button>
+              <p class="small">Last refreshed at {{data.refreshed}}</p>
+              <div><input type="checkbox" ng-model="intervalStarted" ng-click="toggleInterval()" />Trip spot counts refresh every: <input type="range" name="points" min="{{intervalMin}}" max="{{intervalMax}}" step="5" ng-model="refreshInterval" /> {{refreshInterval}} seconds </div>
+              <div><progress value="{{intervalCounter % refreshInterval}}" max="{{refreshInterval}}"></progress></div>
+      </div>
+    </div>
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <td class="cl1">
+            <h2>Student Details</h2>
+  
+          </td> 
+          <td class="cl2">
+            <h2>Trip Choice</h2>
+           </td>
+           <td ng-show="data.userType.isApprover" class="cl3">
+             <h2>Action</h2>
+             <div class="row" ng-show="data.userType.isAdvisor || data.userType.isApprover">
+
+             </div>
+             
+           </td>
+        </tr>
+        <tr ng-show="data.userType.isAdvisor || data.userType.isApprover">
+
+        <td colspan="2">
+          <div classs="col-md-10">
+            <div class="row" >
+                <div class="col-md-3 small">Student Name: <input type="text" ng-model="myFilter.student.fullname"/></div>
+                <div class="col-md-3 small">HRM: <input type="text" ng-model="myFilter.student.hrm"/></div>
+                <div class="col-md-3">Choice 1</div>
+                <div class="col-md-3"><select ng-model="myFilter.currentchoice.choice1" ng-options="c for c in data.possibleChoices"></select></div>
+            </div>
+            <div class="row" >
+                <div class="col-md-3 small">Student ID: <input type="text" ng-model="myFilter.student.id"/></div>
+                <div class="col-md-3 small">Gender: <input type="text" ng-model="myFilter.student.gender"/></div>
+                <div class="col-md-3">Choice 2</div>
+                <div class="col-md-3"><select ng-model="myFilter.currentchoice.choice2" ng-options="c for c in data.possibleChoices"></select></div>                 
+              </div>
+          </div>
+          <div classs="col-md-2">
+            <div class="pull-right"><label><input type="checkbox" ng-model="myFilter.currentchoice.principalChecked" >Approved</label>
+            <button ng-click="resetFilter()">Clear Filter</button>
+            <p>Records: {{filtered.length}}</p></div>
+          </div>
+         </td>
+      </thead>
+      <tbody>
+        <tr ng-repeat="s in students | filter: myFilter as filtered">
+          <td class="cl1"><div class="col-md-12"><span class="glyphicon glyphicon-lock" ng-show="s.currentchoice.principalChecked"></span>{{s.student.fullname}}</div><div class="col-md-12">{{s.student.hrm}} {{s.student.gender}}</div></td>
+          <td class="cl2">
+            <div class="row">
+              <div class="col-md-10">
+                <div class="col-md-12" ng-class="{'bg-warning' : s.currentchoice.choice1 != s.choice.choice1}">
+                  <div class="col-md-8">Main Choice: <span class="lead" ng-class="{'bg-success': (s.currentchoice.choice1 != '') && (s.currentchoice.choice1 != 'NONE')}">{{s.currentchoice.choice1}}</span></div>
+                  <div class="col-md-4"> <select ng-model="s.choice.choice1" ng-options="(c+' ('+tripCounts[c].taken+'/'+tripCounts[c].quota+')') for c in data.possibleChoices"></select></div>
+                </div> 
+                <div class="col-md-12" ng-class="{'bg-warning' : s.currentchoice.choice2 != s.choice.choice2}">
+                  <div class="col-md-8">Second Choice: <span class="lead bg-success">{{s.currentchoice.choice2}}</span></div>
+                  <div class="col-md-4"><select ng-model="s.choice.choice2" ng-options="c for c in $parent.data.possibleChoices"></select></div>
+                </div> 
+              </div>
+              <div class="col-md-2" ng-show="data.userType.isStudent">
+                <button ng-click="studentPostChoices(s.choice, $index)" title="Survey Open:{{s.student.surveyOpen}} from {{s.student.surveyStart}}" ng-show="s.choice.canPost && !(s.choice.advisorChecked || s.choice.principalChecked)" ng-disabled="dataFetching">Submit choices</button>
+                <div class="col-md-12 text-warning" ng-show="s.choice.advisorChecked || s.choice.principalChecked">Your choices have been locked - see advisor / principal for changes</div>
+                <div class="col-md-12" ng-show="!(s.choice.canPost)">Survey Open:{{s.student.surveyOpen}} on {{s.student.surveyStart}}. <button ng-click="reloadData()" ng-disabled="dataFetching" title="click me to refresh data / check if survey is open">Check Now</button></div>
+              </div>
+              
+            </div>
+          </td>
+          <td ng-show="data.userType.isApprover" class="cl3">
+             <label ng-class="{'bg-warning' : s.currentchoice.principalChecked != s.choice.principalChecked}"><input type="checkbox" ng-model="s.choice.principalChecked" >Approve</label>
+             <button ng-click="postChoices(s.choice, $index)">Save</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+
+    
+  </div>
+ 
+</div><!--container-->
+
+<?!= include("script"); ?>
+
+</body>
+</html>
+
+

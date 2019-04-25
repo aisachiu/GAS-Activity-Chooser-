@@ -32,21 +32,9 @@ var myRecommendationSheetName = 'Recommendation';
 //Get User
 
 var thisUser = Session.getActiveUser().getEmail(); //Logged In User
-//var thisUser = '809459@ais.edu.hk';  // 1 
-//var thisUser = '210180@ais.edu.hk'; // 2
-//var thisUser = '809217@ais.edu.hk'; //Miku
-//var thisUser = '809385@ais.edu.hk'; //Jo-Eun (G9)
-//var thisUser = '802313@ais.edu.hk'; //Carol Ho
-//var thisUser = '212386@ais.edu.hk'; //Yvelin Lim
-//var thisUser = '808362@ais.edu.hk'; //Esmeralda
-//var thisUser = '993030@ais.edu.hk'; //Teresa
-//var thisUser = '802898@ais.edu.hk'; //Larissa
-//var thisUser = '807451@ais.edu.hk'; //Sylvia (1st in student list)
-//var thisUser = '211527@ais.edu.hk'; //Ben Keller - bug?
-//var thisUser = '809298@ais.edu.hk'; //
+
 
 // G11 TEST
-//var thisUser = '210212@ais.edu.hk'; //
 
 //Globals for displaying course options in each block
 var coursePerLine = 3; //obsolete!
